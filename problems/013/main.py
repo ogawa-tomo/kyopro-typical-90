@@ -33,16 +33,31 @@ class QueueObject:
         return str(self.distance)
 
 
+def dijkstra(start_node: Node):
+    q: list[QueueObject] = []
+    start_node.distance = 0
+
+    heapq.heappush(q, QueueObject(start_node))
+    while q:
+        queue_object = heapq.heappop(q)
+        node = queue_object.node
+
+        if node.finalized:
+            continue
+        node.finalized = True
+
+        for link in node.links:
+            distance = node.distance + link.distance
+            if distance < link.to_node.distance:
+                link.to_node.distance = distance
+                heapq.heappush(q, QueueObject(link.to_node))
+
+
 N, M = map(int, input().split())
 
-# first_half[k]: 街0から街kまでの最短距離
-first_half: list[int] = [0] * N
-# second_half[k]: 街kから街N-1までの最短距離
-second_half: list[int] = [0] * N
-
-# first_half計算用
+# 0からKまでの距離を格納
 nodes1: list[Node] = [Node(i) for i in range(N)]
-# second_half計算用
+# KからN-1までの距離を格納
 nodes2: list[Node] = [Node(i) for i in range(N)]
 
 for _ in range(M):
@@ -58,31 +73,8 @@ for _ in range(M):
     node2_1.links.append(Link(c, node2_2))
     node2_2.links.append(Link(c, node2_1))
 
-for i in range(2):
-    if i == 0:
-        nodes = nodes1
-        distance_list = first_half
-        start = nodes1[0]
-    else:
-        nodes = nodes2
-        distance_list = second_half
-        start = nodes2[N - 1]
-    q: list[QueueObject] = []
-    start.distance = 0
-    heapq.heappush(q, QueueObject(start))
-    while q:
-        queue_object = heapq.heappop(q)
-        node = queue_object.node
-        if node.finalized:
-            continue
-        node.finalized = True
-        distance_list[node.index] = node.distance
-
-        for link in node.links:
-            distance = node.distance + link.distance
-            if distance < link.to_node.distance:
-                link.to_node.distance = distance
-                heapq.heappush(q, QueueObject(link.to_node))
+dijkstra(nodes1[0])
+dijkstra(nodes2[N - 1])
 
 for i in range(N):
-    print(first_half[i] + second_half[i])
+    print(nodes1[i].distance + nodes2[i].distance)
